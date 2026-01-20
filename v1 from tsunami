@@ -1,0 +1,503 @@
+
+
+local MIN_DISTANCE = 0
+local MAX_DISTANCE = 2.2
+local DEFAULT_DISTANCE = 2.2
+
+
+_G.TP_WALK_ENABLED = false
+_G.TP_DISTANCE = DEFAULT_DISTANCE
+
+
+local MainFrame = Instance.new("ScreenGui")
+local DraggableFrame = Instance.new("Frame")
+local TitleLabel = Instance.new("TextLabel")
+local DistanceTextBox = Instance.new("TextBox")
+local SetButton = Instance.new("TextButton")
+local ResetButton = Instance.new("TextButton")
+local ToggleButton = Instance.new("TextButton") -- The ON/OFF button
+local MinimizeButton = Instance.new("TextButton")
+
+MainFrame.Name = "TPWalkGUI_v6"
+MainFrame.Parent = game:GetService("CoreGui")
+MainFrame.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+DraggableFrame.Name = "DraggableFrame"
+DraggableFrame.Parent = MainFrame
+DraggableFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+DraggableFrame.BorderColor3 = Color3.fromRGB(85, 85, 125)
+DraggableFrame.BorderSizePixel = 2
+DraggableFrame.Position = UDim2.new(0.1, 0, 0.1, 0)
+DraggableFrame.Size = UDim2.new(0, 220, 0, 180) -- Increased height for the new button
+DraggableFrame.Active = true
+DraggableFrame.Draggable = true
+
+TitleLabel.Name = "TitleLabel"
+TitleLabel.Parent = DraggableFrame
+TitleLabel.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+TitleLabel.BorderSizePixel = 0
+TitleLabel.Size = UDim2.new(1, 0, 0, 30)
+TitleLabel.Font = Enum.Font.SourceSansBold
+TitleLabel.Text = "Fares spedbost escfmtsunv6.0"
+TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TitleLabel.TextSize = 18
+
+DistanceTextBox.Name = "DistanceTextBox"
+DistanceTextBox.Parent = DraggableFrame
+DistanceTextBox.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+DistanceTextBox.BorderColor3 = Color3.fromRGB(85, 85, 125)
+DistanceTextBox.Position = UDim2.new(0.5, -75, 0.30, 0)
+DistanceTextBox.Size = UDim2.new(0, 150, 0, 30)
+DistanceTextBox.Font = Enum.Font.SourceSans
+DistanceTextBox.PlaceholderText = "Enter Distance"
+DistanceTextBox.Text = tostring(DEFAULT_DISTANCE)
+DistanceTextBox.TextColor3 = Color3.fromRGB(220, 220, 220)
+DistanceTextBox.TextSize = 16
+DistanceTextBox:GetPropertyChangedSignal("Text"):Connect(function()
+    DistanceTextBox.Text = DistanceTextBox.Text:gsub("[^%d%.]", "")
+end)
+
+SetButton.Name = "SetButton"
+SetButton.Parent = DraggableFrame
+SetButton.BackgroundColor3 = Color3.fromRGB(0, 120, 0)
+SetButton.BorderColor3 = Color3.fromRGB(0, 170, 0)
+SetButton.Position = UDim2.new(0.5, -105, 0.5, 0)
+SetButton.Size = UDim2.new(0, 100, 0, 30)
+SetButton.Font = Enum.Font.SourceSansBold
+SetButton.Text = "Set"
+SetButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+SetButton.TextSize = 16
+
+ResetButton.Name = "ResetButton"
+ResetButton.Parent = DraggableFrame
+ResetButton.BackgroundColor3 = Color3.fromRGB(180, 80, 0)
+ResetButton.BorderColor3 = Color3.fromRGB(230, 130, 0)
+ResetButton.Position = UDim2.new(0.5, 5, 0.5, 0)
+ResetButton.Size = UDim2.new(0, 100, 0, 30)
+ResetButton.Font = Enum.Font.SourceSansBold
+ResetButton.Text = "Reset"
+ResetButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ResetButton.TextSize = 16
+
+ToggleButton.Name = "ToggleButton"
+ToggleButton.Parent = DraggableFrame
+ToggleButton.BackgroundColor3 = Color3.fromRGB(190, 20, 20) 
+ToggleButton.BorderColor3 = Color3.fromRGB(240, 70, 70)
+ToggleButton.Position = UDim2.new(0.5, -75, 0.75, 0)
+ToggleButton.Size = UDim2.new(0, 150, 0, 35)
+ToggleButton.Font = Enum.Font.SourceSansBold
+ToggleButton.Text = "TP Walk: OFF"
+ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleButton.TextSize = 18
+
+MinimizeButton.Name = "MinimizeButton"
+MinimizeButton.Parent = DraggableFrame
+MinimizeButton.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+MinimizeButton.BorderSizePixel = 0
+MinimizeButton.Position = UDim2.new(1, -25, 0, 5)
+MinimizeButton.Size = UDim2.new(0, 20, 0, 20)
+MinimizeButton.Font = Enum.Font.SourceSansBold
+MinimizeButton.Text = "-"
+MinimizeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+MinimizeButton.TextSize = 22
+
+
+local player = game:GetService("Players").LocalPlayer
+local RunService = game:GetService("RunService")
+
+local function tpWalkJoystick()
+    
+    if not _G.TP_WALK_ENABLED then return end
+
+    local character = player.Character
+    if not character or not character:FindFirstChild("Humanoid") or not character:FindFirstChild("HumanoidRootPart") then
+        return
+    end
+
+    local humanoid = character.Humanoid
+    local rootPart = character.HumanoidRootPart
+
+    
+    if humanoid.MoveDirection.Magnitude > 0.1 then
+        
+        
+        local direction = humanoid.MoveDirection
+        
+        
+        rootPart.CFrame = rootPart.CFrame + (direction * _G.TP_DISTANCE)
+    end
+end
+
+
+RunService.RenderStepped:Connect(tpWalkJoystick)
+
+
+SetButton.MouseButton1Click:Connect(function()
+    local distValue = tonumber(DistanceTextBox.Text)
+    if distValue then
+        _G.TP_DISTANCE = math.clamp(distValue, MIN_DISTANCE, MAX_DISTANCE)
+        DistanceTextBox.Text = tostring(_G.TP_DISTANCE) -- Update text to clamped value
+    end
+    SetButton.BackgroundColor3 = Color3.fromRGB(0, 170, 0); wait(0.1); SetButton.BackgroundColor3 = Color3.fromRGB(0, 120, 0)
+end)
+
+ResetButton.MouseButton1Click:Connect(function()
+    _G.TP_DISTANCE = DEFAULT_DISTANCE
+    DistanceTextBox.Text = tostring(DEFAULT_DISTANCE)
+    ResetButton.BackgroundColor3 = Color3.fromRGB(230, 130, 0); wait(0.1); ResetButton.BackgroundColor3 = Color3.fromRGB(180, 80, 0)
+end)
+
+ToggleButton.MouseButton1Click:Connect(function()
+    
+    _G.TP_WALK_ENABLED = not _G.TP_WALK_ENABLED
+    
+    if _G.TP_WALK_ENABLED then
+        
+        ToggleButton.Text = "[ ON ]"
+        ToggleButton.BackgroundColor3 = Color3.fromRGB(0, 150, 0) -- Green
+        ToggleButton.BorderColor3 = Color3.fromRGB(50, 200, 50)
+    else
+        
+        ToggleButton.Text = "[ OFF ]"
+        ToggleButton.BackgroundColor3 = Color3.fromRGB(190, 20, 20) 
+        ToggleButton.BorderColor3 = Color3.fromRGB(240, 70, 70)
+    end
+end)
+
+local isMinimized = false
+MinimizeButton.MouseButton1Click:Connect(function()
+    isMinimized = not isMinimized
+    if isMinimized then
+        DraggableFrame.Size = UDim2.new(0, 220, 0, 30); MinimizeButton.Text = "+"
+        DistanceTextBox.Visible, SetButton.Visible, ResetButton.Visible, ToggleButton.Visible = false, false, false, false
+    else
+        DraggableFrame.Size = UDim2.new(0, 220, 0, 180); MinimizeButton.Text = "-"
+        DistanceTextBox.Visible, SetButton.Visible, ResetButton.Visible, ToggleButton.Visible = true, true, true, true
+    end
+end)
+
+
+
+
+local Players = game:GetService("Players")
+local localPlayer = Players.LocalPlayer
+
+
+local function createGUI()
+    if localPlayer.PlayerGui:FindFirstChild("InfiniteJumpGUI") then return end
+
+    local DraggableGUI = Instance.new("ScreenGui")
+    DraggableGUI.Name = "InfiniteJumpGUI"
+    DraggableGUI.Parent = localPlayer:WaitForChild("PlayerGui")
+    DraggableGUI.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    DraggableGUI.IgnoreGuiInset = true
+
+    
+local DraggableGUI = Instance.new("ScreenGui")
+local MainFrame = Instance.new("Frame")
+local UICorner = Instance.new("UICorner")
+local TitleLabel = Instance.new("TextLabel")
+local UICorner_Title = Instance.new("UICorner")
+local OnOffButton = Instance.new("TextButton")
+local UICorner_Button = Instance.new("UICorner")
+local CreditLabel = Instance.new("TextLabel")
+local UICorner_Credit = Instance.new("UICorner")
+
+
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local localPlayer = Players.LocalPlayer
+
+
+local isJumpActive = false
+local jumpPower = 100 
+local jumpConnection = nil
+
+
+DraggableGUI.Parent = localPlayer:WaitForChild("PlayerGui")
+DraggableGUI.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+DraggableGUI.IgnoreGuiInset = true 
+
+MainFrame.Name = "MainFrame"
+MainFrame.Parent = DraggableGUI
+MainFrame.BackgroundColor3 = Color3.fromRGB(204, 51, 51)
+MainFrame.Position = UDim2.new(0.1, 0, 0.15, 0)
+MainFrame.Size = UDim2.new(0, 220, 0, 125)
+UICorner.CornerRadius = UDim.new(0, 8)
+UICorner.Parent = MainFrame
+
+TitleLabel.Name = "TitleLabel"
+TitleLabel.Parent = MainFrame
+TitleLabel.BackgroundColor3 = Color3.fromRGB(153, 51, 51)
+TitleLabel.Position = UDim2.new(0.07, 0, 0.1, 0)
+TitleLabel.Size = UDim2.new(0, 120, 0, 22)
+TitleLabel.Font = Enum.Font.SourceSans
+TitleLabel.Text = "InfiniteJump v1"
+TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TitleLabel.TextSize = 16
+UICorner_Title.CornerRadius = UDim.new(0, 6)
+UICorner_Title.Parent = TitleLabel
+
+OnOffButton.Name = "OnOffButton"
+OnOffButton.Parent = MainFrame
+OnOffButton.BackgroundColor3 = Color3.fromRGB(255, 230, 230)
+OnOffButton.Position = UDim2.new(0.07, 0, 0.4, 0)
+OnOffButton.Size = UDim2.new(0, 88, 0, 50)
+OnOffButton.Font = Enum.Font.SourceSansBold
+OnOffButton.Text = "OFF"
+OnOffButton.TextColor3 = Color3.fromRGB(200, 0, 0)
+OnOffButton.TextSize = 24
+UICorner_Button.CornerRadius = UDim.new(0, 7)
+UICorner_Button.Parent = OnOffButton
+
+CreditLabel.Name = "CreditLabel"
+CreditLabel.Parent = MainFrame
+CreditLabel.BackgroundColor3 = Color3.fromRGB(153, 51, 51)
+CreditLabel.Position = UDim2.new(0.55, 0, 0.1, 0)
+CreditLabel.Size = UDim2.new(0, 80, 0, 22)
+CreditLabel.Font = Enum.Font.SourceSans
+CreditLabel.Text = "By Fares"
+CreditLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+CreditLabel.TextSize = 16
+UICorner_Credit.CornerRadius = UDim.new(0, 6)
+UICorner_Credit.Parent = CreditLabel
+
+
+local function activateJump()
+    if jumpConnection then return end -- Already active
+
+    jumpConnection = UserInputService.JumpRequest:Connect(function()
+        if isJumpActive and localPlayer.Character then
+            local rootPart = localPlayer.Character:FindFirstChild("HumanoidRootPart")
+            if rootPart then
+                
+                rootPart.Velocity = Vector3.new(rootPart.Velocity.X, jumpPower, rootPart.Velocity.Z)
+            end
+        end
+    end)
+end
+
+local function deactivateJump()
+    if jumpConnection then
+        jumpConnection:Disconnect()
+        jumpConnection = nil
+    end
+end
+
+
+OnOffButton.MouseButton1Click:Connect(function()
+    isJumpActive = not isJumpActive
+    if isJumpActive then
+        OnOffButton.Text = "ON"
+        OnOffButton.TextColor3 = Color3.fromRGB(0, 200, 0)
+        activateJump()
+    else
+        OnOffButton.Text = "OFF"
+        OnOffButton.TextColor3 = Color3.fromRGB(200, 0, 0)
+        deactivateJump()
+    end
+end)
+
+
+local gui = MainFrame
+local dragging, dragStart, startPos
+gui.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dragging = true; dragStart = input.Position; startPos = gui.Position; local c; c = input.Changed:Connect(function() if input.UserInputState == Enum.UserInputState.End then dragging = false; c:Disconnect() end end) end end)
+gui.InputChanged:Connect(function(input) if (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) and dragging then local d = input.Position - dragStart; gui.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + d.X, startPos.Y.Scale, startPos.Y.Offset + d.Y) end end)
+
+
+DraggableGUI.Destroying:Connect(deactivateJump)
+
+
+end
+
+
+createGUI()
+
+
+localPlayer.CharacterAdded:Connect(function()
+    wait(0.5)
+    createGUI()
+end)
+
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
+
+local player = Players.LocalPlayer
+
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "TsunamiRadarFares"
+gui.ResetOnSpawn = false
+gui.Parent = player:WaitForChild("PlayerGui")
+
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 150, 0, 40)
+frame.Position = UDim2.new(0.5, -75, 0.5, -20)
+frame.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+frame.BorderSizePixel = 0
+frame.Active = true
+frame.Draggable = true 
+frame.Parent = gui
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 8)
+corner.Parent = frame
+
+local text = Instance.new("TextLabel")
+text.Size = UDim2.new(1, -8, 1, -8)
+text.Position = UDim2.new(0, 4, 0, 4)
+text.BackgroundTransparency = 1
+text.Text = "بيفحص تسونامي..."
+text.TextColor3 = Color3.new(1, 1, 1)
+text.Font = Enum.Font.GothamMedium
+text.TextSize = 12
+text.TextWrapped = true
+text.TextXAlignment = Enum.TextXAlignment.Left
+text.Parent = frame
+
+
+local credit = Instance.new("TextLabel")
+credit.Size = UDim2.new(1, -8, 0, 10)
+credit.Position = UDim2.new(0, 4, 1, -11)
+credit.BackgroundTransparency = 1
+credit.Text = "by Fares"
+credit.TextColor3 = Color3.fromRGB(140, 140, 160)
+credit.Font = Enum.Font.Gotham
+credit.TextSize = 9
+credit.TextXAlignment = Enum.TextXAlignment.Right
+credit.Parent = frame
+
+
+local function getRoot()
+	local char = player.Character
+	if not char then return nil end
+	return char:FindFirstChild("HumanoidRootPart")
+end
+
+local function getClosestTsunami()
+	local root = getRoot()
+	if not root then return math.huge end
+
+	local closest = math.huge
+
+	for _, obj in pairs(Workspace:GetDescendants()) do
+		if obj:IsA("BasePart") then
+			local name = obj.Name:lower()
+			if name:find("wave") or name:find("tsunami") then
+				local dist = (obj.Position - root.Position).Magnitude
+				if dist < closest then
+					closest = dist
+				end
+			end
+		end
+	end
+
+	return closest
+end
+
+RunService.Heartbeat:Connect(function()
+	local dist = getClosestTsunami()
+
+	if dist <= 500 then
+		frame.BackgroundColor3 = Color3.fromRGB(160, 40, 40)
+		text.Text = "⚠️ تسونامي قريب أوي\n" .. math.floor(dist) .. " متر"
+	elseif dist <= 1000 then
+		frame.BackgroundColor3 = Color3.fromRGB(190, 130, 40)
+		text.Text = "⚠️ تسونامي قريب\n" .. math.floor(dist) .. " متر"
+	elseif dist < math.huge then
+		frame.BackgroundColor3 = Color3.fromRGB(40, 130, 70)
+		text.Text = "✔️ الدنيا أمان\n" .. math.floor(dist) .. " متر"
+	else
+		frame.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+		text.Text = "مفيش تسونامي"
+	end
+end)
+
+
+
+-- الحاجه النادره فشخ هتترسبن بعد XX: XX
+
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local PlayerGui = player:WaitForChild("PlayerGui")
+
+
+local originalTextLabel =
+    workspace.Model:GetChildren()[16]
+    .SurfaceGui.Frame.TextLabel
+
+
+
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "RespawnTextTranslator"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = PlayerGui
+
+
+local frame = Instance.new("Frame")
+-- INCREASED THE HEIGHT SCALE FROM 0.1 to 0.15
+frame.Size = UDim2.new(0.8, 0, 0.15, 0) -- 80% width, 15% height
+frame.Position = UDim2.new(0.5, 0, 0.2, 0)
+frame.AnchorPoint = Vector2.new(0.5, 0)
+frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+frame.BackgroundTransparency = 0.1
+frame.Active = true
+frame.Draggable = true
+frame.Parent = screenGui
+
+
+-- Let's adjust it slightly to better fit the new height. Original was ~380/80=4.75. New is ~380/120=3.1
+local aspectRatio = Instance.new("UIAspectRatioConstraint")
+aspectRatio.AspectRatio = 3.5 -- Adjusted ratio for the new height
+aspectRatio.DominantAxis = Enum.DominantAxis.Width
+aspectRatio.Parent = frame
+
+local sizeConstraint = Instance.new("UISizeConstraint")
+sizeConstraint.MaxSize = Vector2.new(450, math.huge) -- Slightly increased max size as well
+sizeConstraint.Parent = frame
+
+
+local textLabel = Instance.new("TextLabel")
+textLabel.Size = UDim2.new(1, -10, 0.5, -5)
+textLabel.Position = UDim2.new(0, 5, 0, 5)
+textLabel.BackgroundTransparency = 1
+textLabel.TextWrapped = true
+textLabel.TextScaled = true
+textLabel.Font = Enum.Font.GothamBold
+textLabel.TextColor3 = Color3.fromRGB(255, 105, 180) -- Pink
+textLabel.Parent = frame
+
+
+local translationLabel = Instance.new("TextLabel")
+translationLabel.Size = UDim2.new(1, -10, 0.5, -5)
+translationLabel.Position = UDim2.new(0, 5, 0.5, 0)
+translationLabel.BackgroundTransparency = 1
+translationLabel.TextWrapped = true
+translationLabel.TextScaled = true
+translationLabel.Font = Enum.Font.GothamBold
+translationLabel.TextColor3 = Color3.fromRGB(0, 255, 255) -- Cyan
+translationLabel.Parent = frame
+
+
+
+local function translateTimer(text)
+    local time = text:match("(%d%d:%d%d)")
+    if time then
+        return "الحاجه النادرة فشخ هتترسبن بعد " .. time
+    else
+        return ""
+    end
+end
+
+local function updateText()
+    local original = originalTextLabel.Text
+    textLabel.Text = original
+    translationLabel.Text = translateTimer(original)
+end
+
+originalTextLabel:GetPropertyChangedSignal("Text"):Connect(updateText)
+updateText()
+
