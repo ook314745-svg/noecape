@@ -501,3 +501,153 @@ end
 originalTextLabel:GetPropertyChangedSignal("Text"):Connect(updateText)
 updateText()
 
+
+
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local ContextActionService = game:GetService("ContextActionService")
+local UserInputService = game:GetService("UserInputService")
+local StarterGui = game:GetService("StarterGui")
+
+local player = Players.LocalPlayer
+local camera = workspace.CurrentCamera
+
+
+task.spawn(function()
+	StarterGui:SetCore("SendNotification", {
+		Title = "Shiftlock",
+		Text = "Shiftlock Enabled | By فارس",
+		Duration = 4
+	})
+end)
+
+local ShiftlockStarterGui
+local ImageButton
+
+local character
+local humanoid
+local rootPos = Vector3.new(0,0,0)
+
+local MAX_LENGTH = 900000
+local ENABLED_OFFSET = CFrame.new(1.5, 0.75, 0)
+local DISABLED_OFFSET = CFrame.new(-1.5, 0, 0)
+
+local active = nil
+
+local states = {
+	OFF = "rbxasset://textures/ui/mouseLock_off@2x.png",
+	ON  = "rbxasset://textures/ui/mouseLock_on@2x.png"
+}
+
+local function UpdatePos()
+	if humanoid and humanoid.RootPart then
+		rootPos = humanoid.RootPart.Position
+	end
+end
+
+local function UpdateImage(state)
+	if ImageButton then
+		ImageButton.Image = states[state]
+	end
+end
+
+local function UpdateAutoRotate(state)
+	if humanoid then
+		humanoid.AutoRotate = state
+	end
+end
+
+local function GetUpdatedCameraCFrame()
+	return CFrame.new(
+		rootPos,
+		Vector3.new(
+			camera.CFrame.LookVector.X * MAX_LENGTH,
+			rootPos.Y,
+			camera.CFrame.LookVector.Z * MAX_LENGTH
+		)
+	)
+end
+
+local function EnableShiftlock()
+	UpdatePos()
+	UpdateAutoRotate(false)
+	UpdateImage("ON")
+
+	if humanoid and humanoid.RootPart then
+		humanoid.RootPart.CFrame = GetUpdatedCameraCFrame()
+	end
+
+	camera.CFrame = camera.CFrame * ENABLED_OFFSET
+end
+
+local function DisableShiftlock()
+	UpdateAutoRotate(true)
+	UpdateImage("OFF")
+
+	camera.CFrame = camera.CFrame * DISABLED_OFFSET
+
+	if active then
+		active:Disconnect()
+		active = nil
+	end
+end
+
+local function ToggleShiftlock()
+	if not active then
+		active = RunService.RenderStepped:Connect(EnableShiftlock)
+	else
+		DisableShiftlock()
+	end
+end
+
+local function createGUI()
+	if player.PlayerGui:FindFirstChild("Shiftlock (StarterGui)") then
+		player.PlayerGui["Shiftlock (StarterGui)"]:Destroy()
+	end
+
+	ShiftlockStarterGui = Instance.new("ScreenGui")
+	ShiftlockStarterGui.Name = "Shiftlock (StarterGui)"
+	ShiftlockStarterGui.ResetOnSpawn = false
+	ShiftlockStarterGui.Parent = player.PlayerGui
+
+	ImageButton = Instance.new("ImageButton")
+	ImageButton.Parent = ShiftlockStarterGui
+	ImageButton.Active = true
+	ImageButton.Draggable = true
+	ImageButton.BackgroundTransparency = 1
+	ImageButton.Position = UDim2.new(0.921914339, 0, 0.552375436, 0)
+	ImageButton.Size = UDim2.new(0.0636147112, 0, 0.0661305636, 0)
+	ImageButton.SizeConstraint = Enum.SizeConstraint.RelativeXX
+
+	
+	ImageButton.Image = "http://www.roblox.com/asset/?id=182223762"
+	ImageButton.Visible = UserInputService.TouchEnabled
+
+	UpdateImage("OFF")
+	ImageButton.MouseButton1Click:Connect(ToggleShiftlock)
+
+	ContextActionService:BindAction(
+		"ShiftLOCK",
+		function(_, state)
+			if state == Enum.UserInputState.Begin then
+				ToggleShiftlock()
+			end
+		end,
+		false,
+		Enum.KeyCode.LeftShift
+	)
+end
+
+local function onCharacterAdded(char)
+	character = char
+	humanoid = character:WaitForChild("Humanoid")
+	task.wait(0.05)
+	createGUI()
+end
+
+if player.Character then
+	onCharacterAdded(player.Character)
+end
+
+player.CharacterAdded:Connect(onCharacterAdded)
